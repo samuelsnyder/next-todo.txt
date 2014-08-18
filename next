@@ -7,9 +7,11 @@ shift
   echo "  next:"
   echo " todo.sh next"
   echo " if todo.txt is an outline with"
-  echo " whitespace indentations, only " 
-  echo " actions with no subactions or "
-  echo " 'younger' sibline actions "
+  echo " tabbed indentations, the " 
+  echo " tasks with no tasks or "
+  echo " higher siblings actions "
+  echo " will be labeled with +todo "
+  echo " and inherit priority and projects "
   exit
 }
 
