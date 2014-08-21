@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# loop over lines in next/todo.txt
+
+todo.sh lsn | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | sed -r "s/^[0-9]{3} //g" > $TODO_DIR/next/todo.txt 
+# get size of next/todo.txt. store in a file
+sed '/^$/d' $TODO_DIR/next/todo.txt 
+echo "written to  $TODO_DIR/next/todo.txt:"
+cat  $TODO_DIR/next/todo.txt 
