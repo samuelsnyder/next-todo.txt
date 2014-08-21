@@ -81,10 +81,14 @@ shift
                 projects="" 
                 projects=$inheritedprojects
             else
+<<<<<<< HEAD
                 if [ $next -gt 0 ] # if not next, accumulate inherited projects
                     then 
                     projects=$($inheritedprojects + projects)
                 fi
+=======
+                projects=$(echo "$projects $inheritedprojects")
+>>>>>>> ee0579f158de595d463eb4920fe221aeaec54f7a
             fi
         fi
 
