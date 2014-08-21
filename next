@@ -79,7 +79,7 @@ shift
                 projects="" 
                 projects=$inheritedprojects
             else
-                projects=$(echo "$projects inheritedprojects")
+                projects=$(echo "$projects $inheritedprojects")
             fi
         fi
 
