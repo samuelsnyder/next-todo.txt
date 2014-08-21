@@ -24,7 +24,7 @@ shift
     LINES=$(wc -l $TODO_FILE | awk '{print $1}')
     topLevel=$(head -1 $TODO_FILE | tail -1| grep -Eo $'\t' | wc -l)
     # echo "top level = $topLevel "
-    for ((i=1; i <= LINES+1; i++ ))
+    for ((i=1; i <= LINES; i++ ))
     do
         #get levels of prev curr, and next line
         prevLevel=$currLevel
@@ -64,8 +64,7 @@ shift
 
        
         priority=$(head -$i $TODO_FILE | tail -1|grep -Eo '\([A-Z]\)\s') # get priority
-        projects=$(head -$i $TODO_FILE | tail -1|grep -Eo '\+\w*' | tr '\n' ' ' | sed 's/^ *//')
-        
+        projects=$(head -$i $TODO_FILE | tail -1|grep -Eo '\+\w*' | tr '\n' ' ' )
         haspriority=$(echo $priority | grep -c '\([A-Z]\)')
         hasprojects=$(echo $projects | grep -Ec '\+\w*')
 
@@ -79,11 +78,12 @@ shift
                 then
                 projects="" 
                 projects=$inheritedprojects
+            else
+                projects=$(echo "$projects inheritedprojects")
             fi
-
         fi
 
-        task=$(head -$i $TODO_FILE | tail -1|sed -e 's/^[ \t]*//'| sed -e 's/(\([A-Z]\))//'|sed -e 's/^[ \s]*//' |sed -e 's/\+\w*//g') # sed is a pita
+        task=$(head -$i $TODO_FILE | tail -1|sed -e 's/^[ \t]*//'| sed -e 's/(\([A-Z]\))//'|sed -e 's/^[ \s]*//' |sed -e 's/\+\w*//g'|sed -e 's/\s*$//g' ) # sed is a pita
 
         next=$((leaf + maintrunk)) # if 0, display
 
@@ -96,6 +96,8 @@ shift
                         then
                         sed -i "${i}s/$/ \+next/" $TODO_FILE
                     fi
+            else
+                 sed -i "${i}s/\+next//" $TODO_FILE # get rid of next tags
         fi
 
         inheritedpriority=$priority
