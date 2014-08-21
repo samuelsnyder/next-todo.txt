@@ -68,6 +68,8 @@ shift
         haspriority=$(echo $priority | grep -c '\([A-Z]\)')
         hasprojects=$(echo $projects | grep -Ec '\+\w*')
 
+        next=$((leaf + maintrunk)) # if 0, display
+
         if [ $maintrunk -eq 0 ]
             then
             if [ $haspriority -eq 0 ]
@@ -79,13 +81,15 @@ shift
                 projects="" 
                 projects=$inheritedprojects
             else
-                projects=$(echo "$projects inheritedprojects")
+                if [ $next -gt 0 ] # if not next, accumulate inherited projects
+                    then 
+                    projects=$($inheritedprojects + projects)
+                fi
             fi
         fi
 
         task=$(head -$i $TODO_FILE | tail -1|sed -e 's/^[ \t]*//'| sed -e 's/(\([A-Z]\))//'|sed -e 's/^[ \s]*//' |sed -e 's/\+\w*//g'|sed -e 's/\s*$//g' ) # sed is a pita
 
-        next=$((leaf + maintrunk)) # if 0, display
 
         if [ $next -eq 0 ] 
             then
@@ -110,10 +114,3 @@ shift
 
             post_filter_command="awk -v TOTAL=$TOTAL -v PADDING=$PADDING '{ \$1 = sprintf(\"%\" PADDING \"d\", (\$1 > TOTAL ? 0 : \$1)); print }' "
             cat "$TODO_FILE" | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@" "+next"
-
-            if [ $TODOTXT_VERBOSE -gt 0 ]; then
-                TDONE=$( sed -n '$ =' "$DONE_FILE" )
-                TASKNUM=$(TODOTXT_PLAIN=1 TODOTXT_VERBOSE=0 _format "$TODO_FILE" 1 "$@" "+next" | sed -n '$ =')
-                echo "--"
-                echo "$(getPrefix "$TODO_FILE"): ${TASKNUM:-0} of ${TOTAL:-0} tasks shown"
-            fi
