@@ -33,9 +33,7 @@ next actions will be displayed as
     --
     TODO: 2 of 10 tasks shown
   
-To show all tasks
-
 
 ## Installation
 
-Put next in your addon directory, following directions on the [todo.txt project page](https://github.com/ginatrapani/todo.txt-cli/wiki/Todo.sh-Add-on-Directory#installation)
+Put **next** in your addon directory, following directions on the [todo.txt project page](https://github.com/ginatrapani/todo.txt-cli/wiki/Todo.sh-Add-on-Directory#installation)
