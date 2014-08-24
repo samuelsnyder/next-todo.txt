@@ -7,105 +7,59 @@ shift
   echo "  next:"
   echo " todo.sh next"
   echo " if todo.txt is an outline with"
-  echo " tabbed indentations, the " 
-  echo " tasks with no tasks or "
+  echo " tabbed indentations, next " 
+  echo " displays tasks with no tasks or "
   echo " higher siblings actions "
-  echo " will be labeled with +todo "
-  echo " and inherit priority and projects "
   exit
 }
 
-    # get next actions only
+TOTAL=$( sed -n '$ =' "$TODO_FILE" )
+PADDING=${#TOTAL}
 
-    # begin interating through lines todo.txt
-    currLevel=99
-    leaf=0  # for identifying tasks with no subtask
-    maintrunk=0 # for identifying tasks on "main" branch
-    LINES=$(wc -l $TODO_FILE | awk '{print $1}')
-    topLevel=$(head -1 $TODO_FILE | tail -1| grep -Eo $'\t' | wc -l)
-    # echo "top level = $topLevel "
-    for ((i=1; i <= LINES; i++ ))
-    do
-        #get levels of prev curr, and next line
-        prevLevel=$currLevel
+awk 'BEGIN {
+    FS = "\t";
+    main = 1
+    prevleaf = 1
+    curr=0
+    } ;
+    {
+    prev=curr
+    prevLine=currLine
+    curr=NF
+    currLine=$curr
+    # identify prevleaf
+    if (prev >= curr){
+      prevleaf=1
+    }
+    else
+    {prevleaf=0}
 
-        currLevel=$(head -$i $TODO_FILE | tail -1| grep -Eo $'\t' | wc -l)
-        
-        if [ $i -le $LINES ]
-            then
-            nextLevel=$(head -$((i+1)) $TODO_FILE | tail -1| grep -Eo $'\t' | wc -l)
-        else
-            nextLevel=$topLevel
-        fi
-        
-        leaf=0 # task is leaf unless shown othewise
+    if (prevleaf && main)
+      {prevnext=1}
+    else
+      {prevnext=0}
+    if( prevnext == 1)
+      {
+        print prevLine
+      }
+    else
+      {
+        print ""
+      }
+ 
 
-        #does it have subtask?
-        if [ $currLevel -lt $nextLevel ]
-            then
-            leaf=-1 #don't display, not leaf
-        fi
+    # if prev is prevleaf, curr is off main trunk
+    if (prevleaf > 0){
+      main =0
+    }
 
-        #if top level?
-        if [ $topLevel -eq $currLevel ]
-            then
-            maintrunk=0
-            inheritedpriority=""
-            inheritedprojects=""
-        else
+    # new root means back on main
+    if (curr==1){
+      main=1
+    }
 
-            #does it have "older" sibling
-            if [ $currLevel -le $prevLevel ]
-               then
-               inheritedprojects=""
-               maintrunk=-1
-           fi           
-       fi
-
-       
-        priority=$(head -$i $TODO_FILE | tail -1|grep -Eo '\([A-Z]\)\s') # get priority
-        projects=$(head -$i $TODO_FILE | tail -1|grep -Eo '\+\w*' | tr '\n' ' ' )
-        haspriority=$(echo $priority | grep -c '\([A-Z]\)')
-        hasprojects=$(echo $projects | grep -Ec '\+\w*')
-
-        next=$((leaf + maintrunk)) # if 0, display
-
-        if [ $maintrunk -eq 0 ]
-            then
-            if [ $haspriority -eq 0 ]
-                then 
-                priority=$inheritedpriority
-            fi
-            if [ $hasprojects -eq 0 ]
-                then
-                projects="" 
-                projects=$inheritedprojects
-            fi
-        fi
-
-        task=$(head -$i $TODO_FILE | tail -1|sed -e 's/^[ \t]*//'| sed -e 's/(\([A-Z]\))//'|sed -e 's/^[ \s]*//' |sed -e 's/\+\w*//g'|sed -e 's/\s*$//g' ) # sed is a pita
-
-
-        if [ $next -eq 0 ] 
-            then
-
-               sed -i "${i}s/[^\t].*$/${priority}${task} ${projects} /" $TODO_FILE # sed -i "${i}s/[\(\w].*/${priority}${task} +next/" $TODO_FILE
-                    hasnext=$(echo $projects | grep -c '\+next')
-                    if [ $hasnext -eq 0 ]
-                        then
-                        sed -i "${i}s/$/ \+next/" $TODO_FILE
-                    fi
-            else
-                 sed -i "${i}s/\+next//" $TODO_FILE # get rid of next tags
-        fi
-
-        inheritedpriority=$priority
-        inheritedprojects=$projects
-
-    done
-
-            TOTAL=$( sed -n '$ =' "$TODO_FILE" )
-            PADDING=${#TOTAL}
-
-            post_filter_command="awk -v TOTAL=$TOTAL -v PADDING=$PADDING '{ \$1 = sprintf(\"%\" PADDING \"d\", (\$1 > TOTAL ? 0 : \$1)); print }' "
-            cat "$TODO_FILE" | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@" "+next"
+}
+END {
+  if ((main==1 && curr > prev) || curr==1)
+    print currLine
+ }'  $TODO_FILE  | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@" # use _format to highlight
