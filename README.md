@@ -27,8 +27,7 @@ Organize your todo.txt into a tab indented outline, similar to
 	
 next actions will be displayed as
 
-  $ todo.sh next
-
+    $ todo.sh next
     03 buy a collar
     08 get directions to library
     --
