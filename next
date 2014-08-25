@@ -13,13 +13,14 @@ shift
   exit
 }
 
-TOTAL=$( sed -n '$ =' "$TODO_FILE" )
-PADDING=${#TOTAL}
 
+# put next items in todo.txt
+TOTAL=$( sed -n '$ =' "$TODO_FILE" )
+            PADDING=${#TOTAL}
 awk 'BEGIN {
     FS = "\t";
     main = 1
-    prevleaf = 1
+    isprevleaf = 1
     curr=0
     } ;
     {
@@ -27,29 +28,30 @@ awk 'BEGIN {
     prevLine=currLine
     curr=NF
     currLine=$curr
-    # identify prevleaf
+    # identify isprevleaf
     if (prev >= curr){
-      prevleaf=1
+      isprevleaf=1
     }
     else
-    {prevleaf=0}
+    {isprevleaf=0}
 
-    if (prevleaf && main)
-      {prevnext=1}
+    if (isprevleaf && main)
+      {isprevnext=1}
     else
-      {prevnext=0}
-    if( prevnext == 1)
+      {isprevnext=0}
+    if( isprevnext == 1)
       {
         print prevLine
       }
     else
       {
-        print ""
+        if (NR > 1)
+        print NR  
       }
  
 
-    # if prev is prevleaf, curr is off main trunk
-    if (prevleaf > 0){
+    # if prev is isprevleaf, curr is off main trunk
+    if (isprevleaf > 0){
       main =0
     }
 
@@ -62,4 +64,5 @@ awk 'BEGIN {
 END {
   if ((main==1 && curr > prev) || curr==1)
     print currLine
- }'  $TODO_FILE  | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@" # use _format to highlight
+}'  $TODO_FILE    | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@"
+
