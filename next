@@ -4,12 +4,9 @@ action=$1
 shift
 
 [ "$action" = "usage" ] && {
-  echo "  next:"
-  echo " todo.sh next"
-  echo " if todo.txt is an outline with"
-  echo " tabbed indentations, next " 
-  echo " displays tasks with no tasks or "
-  echo " higher siblings actions "
+  echo "    next [TERM...]"
+  echo "      if todo.txt is an outline with tabbed indentations, next will display"
+  echo "      the tasks with no subtasks or sibling tasks above them for each root task"
   exit
 }
 
@@ -19,36 +16,73 @@ TOTAL=$( sed -n '$ =' "$TODO_FILE" )
             PADDING=${#TOTAL}
 awk 'BEGIN {
     FS = "\t";
-    main = 1
-    isprevleaf = 1
-    curr=0
+    main = 1 # main trunk of task tree
+    isprevleaf = 1 # previous task has no subtasks
+    curr=0 # level of indentation on current line
     } ;
     {
+
     prev=curr
     prevLine=currLine
     curr=NF
     currLine=$curr
-    # identify isprevleaf
+
+    # get current priority or inherit    
+    prevPriority=currPriority
+
+    regex="\\([A-Z]\\) "
+    start=match(currLine, regex)
+    if(start || curr==1){
+      currPriority=substr(currLine, start, RLENGTH)
+      currLine=substr(currLine, start+RLENGTH)
+    }
+    if (!currPriority)
+      currPriority=priorities[NF-1] # if no priority, inherit
+
+    priorities[NF]=currPriority # add current to proirity array
+
+    # get current projects and inherit
+    regex="\\+[a-zA-Z0-9]+"
+    start = match(currLine, regex)
+    currProj=substr(currLine, start, RLENGTH)
+    substring=currLine
+    while (start){
+      substring=substr(substring, start+RLENGTH)
+      start=match(substring, regex)
+      proj = substr(substring, start, RLENGTH)
+      if(start)
+        currProj = currProj " " proj
+    }
+
+    projects[NF] = currProj
+    prevInheritedProjects=inheritedProjects
+    inheritedProjects = ""
+    for (i=1; i<NF; i++){ # inherit all projects from previous levels
+      if(projects[i])
+        inheritedProjects = inheritedProjects " " projects[i]
+  }
+
+    # identify if previous task was leaf
     if (prev >= curr){
       isprevleaf=1
     }
     else
     {isprevleaf=0}
 
+    # identify if previous task was a next action
     if (isprevleaf && main)
       {isprevnext=1}
     else
       {isprevnext=0}
     if( isprevnext == 1)
       {
-        print prevLine
+        print prevPriority prevLine prevInheritedProjects
       }
     else
       {
-        if (NR > 1)
-        print NR  
+        if (NR > 1) 
+         print  "" # blank lines preserve original task line number
       }
- 
 
     # if prev is isprevleaf, curr is off main trunk
     if (isprevleaf > 0){
@@ -59,10 +93,8 @@ awk 'BEGIN {
     if (curr==1){
       main=1
     }
-
 }
 END {
   if ((main==1 && curr > prev) || curr==1)
     print currLine
-}'  $TODO_FILE    | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@"
-
+}'  $TODO_FILE  | TODOTXT_VERBOSE=0 _format '' "$PADDING" "$@" # use builtin _format function to print
