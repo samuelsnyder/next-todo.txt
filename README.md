@@ -31,7 +31,12 @@ next actions will be displayed as (with color coding)
     $ todo.sh next
     03 (A) buy a collar @petstore +pets +collar
     08 (B) get directions to library +read
-  
+    
+searching with **next** works the same as with ls
+
+    $ t next @petstore
+    03 (A) buy a collar @petstore +pets +collar
+
 ## Installation
 
 Put **next** in your addon directory, following directions on the [todo.txt project page](https://github.com/ginatrapani/todo.txt-cli/wiki/Todo.sh-Add-on-Directory#installation)
